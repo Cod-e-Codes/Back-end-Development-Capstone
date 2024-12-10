@@ -1,26 +1,37 @@
-# 1. insert code to python:3.9.16-slim as base image
+# 1. Use python:3.9.16-slim as base image
+FROM python:3.9.16-slim
 
+# Set environment variables
 ENV PYTHONBUFFERED 1
 ENV PYTHONWRITEBYTECODE 1
 
+# Install necessary packages
 RUN apt-get update \
     && apt-get install -y netcat
 
+# Define the application directory
 ENV APP=/app
 
-# 2. insert code to change the working directory to $APP
+# 2. Change the working directory to $APP
+WORKDIR $APP
 
-# 3. insert code to copy the requirements.txt file to $APP
+# 3. Copy the requirements.txt file to $APP
+COPY requirements.txt $APP
 
-# 4. insert code to install requirements from requirements.txt
+# 4. Install dependencies from requirements.txt
+RUN pip3 install -r requirements.txt
 
-# 5. insert code to copy the rest of the files into $APP
+# 5. Copy the rest of the source code into $APP
+COPY . $APP
 
-# 6. insert code to expose the port here 
+# 6. Expose port 8000
+EXPOSE 8000
 
+# Set executable permissions for entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
+# Define the entrypoint script
 ENTRYPOINT ["/bin/bash","/app/entrypoint.sh"]
 
-# 7. insert code to set the run command to "python manage.py runserver 0.0.0.0:8000"
-
+# 7. Set the default command to run the Django development server
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
