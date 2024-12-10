@@ -47,34 +47,29 @@ def index(request):
 
 
 def songs(request):
-    # Dummy data to be displayed on the Songs page
-    songs = {
-        "songs": [
-            {
-                "id": 1,
-                "title": "duis faucibus accumsan odio curabitur convallis",
-                "lyrics": "Morbi non lectus. Aliquam sit amet diam in magna bibendum imperdiet. Nullam orci pede, venenatis non, sodales sed, tincidunt eu, felis."
-            }
-        ]
-    }
-    # Render the songs.html template with the provided songs data
+    # Replace with your Songs microservice URL
+    SONGS_URL = "http://songs-sn-labs-codylmarseng.labs-prod-openshift-san-a45631dc5778dc6371c67d206ba9ae5c-0000.us-east.containers.appdomain.cloud"
+    try:
+        # Fetch songs data from the Songs microservice
+        songs = req.get(f"{SONGS_URL}/song").json()
+    except req.RequestException as e:
+        # Handle errors by showing an empty list or error message
+        print(f"Error fetching songs: {e}")
+        songs = {"songs": []}
     return render(request, "songs.html", {"songs": songs["songs"]})
 
 
 def photos(request):
-    # Dummy data to be displayed on the Photos page
-    photos = [
-        {
-            "id": 1,
-            "pic_url": "http://dummyimage.com/136x100.png/5fa2dd/ffffff",
-            "event_country": "United States",
-            "event_state": "District of Columbia",
-            "event_city": "Washington",
-            "event_date": "11/16/2022"
-        }
-    ]
-    # Render the photos.html template with the provided photos data
-    return render(request, "photos.html", {"photos": photos})
+    # Replace with your Pictures microservice URL
+    PHOTO_URL = "https://pictures.1p9oyxb0eh1k.us-south.codeengine.appdomain.cloud"
+    try:
+        # Fetch photos data from the Pictures microservice
+        photos = req.get(f"{PHOTO_URL}/picture").json()
+    except req.RequestException as e:
+        # Handle errors by showing an empty list or error message
+        print(f"Error fetching photos: {e}")
+        photos = {"photos": []}
+    return render(request, "photos.html", {"photos": photos["photos"]})
 
 
 def login_view(request):
