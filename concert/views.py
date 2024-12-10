@@ -14,7 +14,32 @@ import requests as req
 # Create your views here.
 
 def signup(request):
-    pass
+    if request.method == "POST":
+        # Get username and password from the POST request
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        try:
+            # Check if the user already exists
+            user = User.objects.filter(username=username).first()
+            if user:
+                # If user exists, return the signup page with an error message
+                return render(request, "signup.html", {"form": SignUpForm(), "message": "User already exists"})
+            else:
+                # Create a new user with a hashed password
+                user = User.objects.create(
+                    username=username, 
+                    password=make_password(password)
+                )
+                # Log in the new user
+                login(request, user)
+                # Redirect to the index page
+                return HttpResponseRedirect(reverse("index"))
+        except User.DoesNotExist:
+            # If something goes wrong, re-render the signup page
+            return render(request, "signup.html", {"form": SignUpForm()})
+    # Render the signup page for GET requests
+    return render(request, "signup.html", {"form": SignUpForm()})
+
 
 
 def index(request):
@@ -22,24 +47,92 @@ def index(request):
 
 
 def songs(request):
-    # songs = {"songs":[]}
-    # return render(request, "songs.html", {"songs": [insert list here]})
-    pass
+    # Dummy data to be displayed on the Songs page
+    songs = {
+        "songs": [
+            {
+                "id": 1,
+                "title": "duis faucibus accumsan odio curabitur convallis",
+                "lyrics": "Morbi non lectus. Aliquam sit amet diam in magna bibendum imperdiet. Nullam orci pede, venenatis non, sodales sed, tincidunt eu, felis."
+            }
+        ]
+    }
+    # Render the songs.html template with the provided songs data
+    return render(request, "songs.html", {"songs": songs["songs"]})
 
 
 def photos(request):
-    # photos = []
-    # return render(request, "photos.html", {"photos": photos})
-    pass
+    # Dummy data to be displayed on the Photos page
+    photos = [
+        {
+            "id": 1,
+            "pic_url": "http://dummyimage.com/136x100.png/5fa2dd/ffffff",
+            "event_country": "United States",
+            "event_state": "District of Columbia",
+            "event_city": "Washington",
+            "event_date": "11/16/2022"
+        }
+    ]
+    # Render the photos.html template with the provided photos data
+    return render(request, "photos.html", {"photos": photos})
+
 
 def login_view(request):
-    pass
+    if request.method == "POST":
+        # Get username and password from the POST request
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        try:
+            # Find the user with the provided username
+            user = User.objects.get(username=username)
+            # Check if the password is correct
+            if user.check_password(password):
+                # Log in the user
+                login(request, user)
+                # Redirect to the index page
+                return HttpResponseRedirect(reverse("index"))
+            else:
+                # If the password is incorrect, re-render the login page with an error
+                return render(request, "login.html", {"form": LoginForm(), "message": "Invalid username or password"})
+        except User.DoesNotExist:
+            # If the user does not exist, re-render the login page with an error
+            return render(request, "login.html", {"form": LoginForm(), "message": "Invalid username or password"})
+    # Render the login page for GET requests
+    return render(request, "login.html", {"form": LoginForm()})
+
 
 def logout_view(request):
-    pass
+    # Log out the user
+    logout(request)
+    # Redirect to the login page
+    return HttpResponseRedirect(reverse("login"))
+
 
 def concerts(request):
-    pass
+    if request.user.is_authenticated:
+        # Initialize an empty list to hold concert details
+        lst_of_concert = []
+        # Retrieve all concert objects from the database
+        concert_objects = Concert.objects.all()
+        # Loop through each concert object
+        for item in concert_objects:
+            try:
+                # Check if the current user is attending this concert
+                status = item.attendee.filter(user=request.user).first().attending
+            except:
+                # If no attendee status exists, set it to "-"
+                status = "-"
+            # Append the concert and its status to the list
+            lst_of_concert.append({
+                "concert": item,
+                "status": status
+            })
+        # Render the concerts.html template with the list of concerts
+        return render(request, "concerts.html", {"concerts": lst_of_concert})
+    else:
+        # Redirect to the login page if the user is not authenticated
+        return HttpResponseRedirect(reverse("login"))
+
 
 
 def concert_detail(request, id):
